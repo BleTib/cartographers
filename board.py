@@ -45,26 +45,18 @@ selected_tile_type = 1
 
 
 # Function to draw the board
-def draw_board(screen, preview_pos=None):
+def draw_board(screen):
     for col in range(BOARD_SIZE):
         for row in range(BOARD_SIZE):
             tile = (col * TILE_SIZE, row * TILE_SIZE)
             field = board[col][row]
             screen.blit(tiles[field], tile)
 
-    # Draw preview if position is given
-    if preview_pos:
-        for i in range(3):  # Adjust for 3x1 tile
-            preview_col, preview_row = preview_pos[0] + i, preview_pos[1]
-            if 0 <= preview_col < BOARD_SIZE:
-                preview_tile = (preview_col * TILE_SIZE, preview_row * TILE_SIZE)
-                screen.blit(preview_tiles[selected_tile_type], preview_tile)
-
 
 # Function to draw the preview based on relative positions
-def draw_preview(screen, preview_pos, relative_positions):
+def draw_preview(screen, preview_pos, shape_positions):
     if preview_pos:
-        for rel_pos in relative_positions:
+        for rel_pos in shape_positions:
             preview_col, preview_row = (
                 preview_pos[0] + rel_pos[0],
                 preview_pos[1] + rel_pos[1],
@@ -74,8 +66,8 @@ def draw_preview(screen, preview_pos, relative_positions):
                 screen.blit(preview_tiles[selected_tile_type], preview_tile)
 
 
-def check_tiles(board, pos, relative_positions):
-    for rel_pos in relative_positions:
+def check_tiles(board, pos, shape_positions):
+    for rel_pos in shape_positions:
         col, row = pos[0] + rel_pos[0], pos[1] + rel_pos[1]
         if 0 <= col < BOARD_SIZE and 0 <= row < BOARD_SIZE:
             # Check if a tile already exists at this position
@@ -85,11 +77,8 @@ def check_tiles(board, pos, relative_positions):
 
 
 # Function to place a tile on the board with relative positions
-def place_tiles(board, pos, tile_type, relative_positions):
-    # if not check_tile(board, pos, relative_positions):
-    #     print("A tile already exists at this position.")
-    #     return
-    for rel_pos in relative_positions:
+def place_tiles(board, pos, tile_type, shape_positions):
+    for rel_pos in shape_positions:
         col, row = pos[0] + rel_pos[0], pos[1] + rel_pos[1]
         board[col][row] = tile_type
 
@@ -104,15 +93,15 @@ SHAPES = {
 
 
 # Function to rotate the relative positions
-def rotate_shape(relative_positions):
+def rotate_shape(shape_positions):
     # Swap x and y for each position to rotate 90 degrees
-    return [(pos[1], pos[0]) for pos in relative_positions]
+    return [(pos[1], pos[0]) for pos in shape_positions]
 
 
 # Function to flip the relative positions
-def flip_shape(relative_positions):
+def flip_shape(shape_positions):
     # FLip the shape to mirror it
-    return [(-pos[0], pos[1]) for pos in relative_positions]
+    return [(-pos[0], pos[1]) for pos in shape_positions]
 
 
 # Adjust hover position based on the current shape
