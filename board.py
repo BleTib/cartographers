@@ -88,20 +88,18 @@ SHAPES = {
     "3x1": [(0, -1), (0, 0), (0, 1)],
     "Edge": [(0, 1), (0, 0), (1, 0)],
     "L": [(-1, 0), (0, 0), (1, 0), (1, 1)],
-    "T": [(0, -1), (0, 0), (0, 1), (1, 0), (2, 0)],
+    "T": [(-1, -1), (-1, 0), (-1, 1), (0, 0), (1, 0)],
     "t": [(0, -1), (0, 0), (0, 1), (1, 0)],
 }
 
 
-# Function to rotate the relative positions
+# Rotate the shape 90 degrees clockwise
 def rotate_shape(shape_positions):
-    # Swap x and y for each position to rotate 90 degrees
-    return [(pos[1], pos[0]) for pos in shape_positions]
+    return [(-pos[1], pos[0]) for pos in shape_positions]
 
 
-# Function to flip the relative positions
+# Flip the shape horizontally
 def flip_shape(shape_positions):
-    # FLip the shape to mirror it
     return [(-pos[0], pos[1]) for pos in shape_positions]
 
 
