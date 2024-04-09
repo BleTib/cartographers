@@ -66,14 +66,14 @@ def draw_preview(screen, preview_pos, shape_positions):
                 screen.blit(preview_tiles[selected_tile_type], preview_tile)
 
 
-def check_tiles(board, pos, shape_positions):
+def tiles_overlap(board, pos, shape_positions):
     for rel_pos in shape_positions:
         col, row = pos[0] + rel_pos[0], pos[1] + rel_pos[1]
         if 0 <= col < BOARD_SIZE and 0 <= row < BOARD_SIZE:
             # Check if a tile already exists at this position
             if board[col][row] != 0:
-                return False
-    return True
+                return True
+    return False
 
 
 # Function to place a tile on the board with relative positions
@@ -103,13 +103,27 @@ def flip_shape(shape_positions):
     return [(-pos[0], pos[1]) for pos in shape_positions]
 
 
-# Adjust hover position based on the current shape
-def adjust_hover_pos(hover_pos, shape):
-    max_col_offset = max(rel_pos[0] for rel_pos in shape)
-    max_row_offset = max(rel_pos[1] for rel_pos in shape)
-    adjusted_col = min(hover_pos[0], BOARD_SIZE - 1 - max_col_offset)
-    adjusted_row = min(hover_pos[1], BOARD_SIZE - 1 - max_row_offset)
-    return adjusted_col, adjusted_row
+# hover position not going out of bounds
+def shape_out_of_bound(hover_pos, shape):
+    min_x_offset = min(rel_pos[0] + hover_pos[0] for rel_pos in shape)
+    min_y_offset = min(rel_pos[1] + hover_pos[1] for rel_pos in shape)
+    max_x_offset = max(rel_pos[0] + hover_pos[0] for rel_pos in shape)
+    max_y_offset = max(rel_pos[1] + hover_pos[1] for rel_pos in shape)
+    if (
+        min_x_offset < 0
+        or min_y_offset < 0
+        or max_x_offset >= BOARD_SIZE
+        or max_y_offset >= BOARD_SIZE
+    ):
+        return True
+    return False
+
+
+def move_shape(hover_pos, new_pos_relative, selected_shape):
+    new_pos = (hover_pos[0] + new_pos_relative[0], hover_pos[1] + new_pos_relative[1])
+    if not shape_out_of_bound(new_pos, selected_shape):
+        return new_pos
+    return hover_pos
 
 
 def new_shape():
@@ -119,11 +133,13 @@ def new_shape():
 
 
 hover_pos, selected_shape = new_shape()
+
+
 # Main loop
 running = True
 while running:
 
-    hover_pos = adjust_hover_pos(hover_pos, selected_shape)
+    # hover_pos = adjust_hover_pos(hover_pos, selected_shape)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -133,20 +149,20 @@ while running:
             elif event.key == pygame.K_f:
                 selected_shape = flip_shape(selected_shape)
             elif event.key == pygame.K_e:
-                if check_tiles(board, hover_pos, selected_shape):
+                if not tiles_overlap(board, hover_pos, selected_shape):
                     place_tiles(board, hover_pos, selected_tile_type, selected_shape)
                     hover_pos, selected_shape = new_shape()
             # WASD keys to move the hover position
             elif event.key == pygame.K_w:
-                hover_pos = (hover_pos[0], max(0, hover_pos[1] - 1))
+                hover_pos = move_shape(hover_pos, (0, -1), selected_shape)
             elif event.key == pygame.K_s:
-                hover_pos = (hover_pos[0], min(BOARD_SIZE - 1, hover_pos[1] + 1))
+                hover_pos = move_shape(hover_pos, (0, 1), selected_shape)
             elif event.key == pygame.K_a:
-                hover_pos = (max(0, hover_pos[0] - 1), hover_pos[1])
+                hover_pos = move_shape(hover_pos, (-1, 0), selected_shape)
             elif event.key == pygame.K_d:
-                hover_pos = (min(BOARD_SIZE - 1, hover_pos[0] + 1), hover_pos[1])
+                hover_pos = move_shape(hover_pos, (1, 0), selected_shape)
 
-    screen.fill((0, 0, 0))  # Clear the screen with a black color
+    # screen.fill((0, 0, 0))  # Clear the screen with a black color
     draw_board(screen)
     draw_preview(screen, hover_pos, selected_shape)
     pygame.display.flip()
