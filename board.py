@@ -1,6 +1,8 @@
-import pygame
 import os
+import pygame
 import random
+
+from cards import TILES_DICT
 
 # Initialize Pygame
 pygame.init()
@@ -12,26 +14,37 @@ WINDOW_SIZE = (TILE_SIZE * BOARD_SIZE, TILE_SIZE * BOARD_SIZE)
 
 
 # Load images
-def load_image(name, alpha=False):
-    path = os.path.join("images", name)
+def load_tile(name, alpha=False):
+    path = os.path.join("images/tiles/basic", name)
     image = pygame.transform.scale(pygame.image.load(path), (TILE_SIZE, TILE_SIZE))
     if alpha:
         image.set_alpha(128)  # Set semi-transparent
     return image
 
 
-# Images for tiles
-tiles = {
-    0: load_image("white.png"),
-    1: load_image("tree.png"),
-    2: load_image("water.png"),
-}
+def init_tiles(tiles_dict):
+    tiles = {}
+    for _, tile in tiles_dict.items():
+        tile.img = load_tile(tile.image_name)
+        tile.img_prev = load_tile(tile.image_name, alpha=True)
+        tiles[tile.val] = tile
+    return tiles
 
-# Semi-transparent tiles for preview
-preview_tiles = {
-    1: load_image("tree.png", alpha=True),
-    2: load_image("water.png", alpha=True),
-}
+
+TILES = init_tiles(TILES_DICT)
+
+# # Images for tiles
+# tiles = {
+#     0: load_tile("white.png"),
+#     1: load_tile("tree.png"),
+#     2: load_tile("water.png"),
+# }
+
+# # Semi-transparent tiles for preview
+# preview_tiles = {
+#     1: load_tile("tree.png", alpha=True),
+#     2: load_tile("water.png", alpha=True),
+# }
 
 # Create the window
 screen = pygame.display.set_mode(WINDOW_SIZE)
@@ -40,21 +53,18 @@ pygame.display.set_caption("Land Board")
 # Create board
 board = [[0 for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
-# Currently selected tile type (1 for tree, 2 for water, etc.)
-selected_tile_type = 1
-
 
 # Function to draw the board
 def draw_board(screen):
     for col in range(BOARD_SIZE):
         for row in range(BOARD_SIZE):
             tile = (col * TILE_SIZE, row * TILE_SIZE)
-            field = board[col][row]
-            screen.blit(tiles[field], tile)
+            type = board[col][row]
+            screen.blit(TILES[type].img, tile)
 
 
 # Function to draw the preview based on relative positions
-def draw_preview(screen, preview_pos, shape_positions):
+def draw_preview(screen, preview_pos, shape_positions, selected_tile_type):
     if preview_pos:
         for rel_pos in shape_positions:
             preview_col, preview_row = (
@@ -63,7 +73,7 @@ def draw_preview(screen, preview_pos, shape_positions):
             )
             if 0 <= preview_col < BOARD_SIZE and 0 <= preview_row < BOARD_SIZE:
                 preview_tile = (preview_col * TILE_SIZE, preview_row * TILE_SIZE)
-                screen.blit(preview_tiles[selected_tile_type], preview_tile)
+                screen.blit(TILES[selected_tile_type].img_prev, preview_tile)
 
 
 def tiles_overlap(board, pos, shape_positions):
@@ -129,10 +139,11 @@ def move_shape(hover_pos, new_pos_relative, selected_shape):
 def new_shape():
     hover_pos = (BOARD_SIZE // 2, BOARD_SIZE // 2)
     selected_shape = SHAPES[random.choice(list(SHAPES.keys()))]
-    return hover_pos, selected_shape
+    selected_tile_type = random.randint(1, len(TILES) - 1)
+    return hover_pos, selected_shape, selected_tile_type
 
 
-hover_pos, selected_shape = new_shape()
+hover_pos, selected_shape, selected_tile_type = new_shape()
 
 
 # Main loop
@@ -151,7 +162,7 @@ while running:
             elif event.key == pygame.K_e:
                 if not tiles_overlap(board, hover_pos, selected_shape):
                     place_tiles(board, hover_pos, selected_tile_type, selected_shape)
-                    hover_pos, selected_shape = new_shape()
+                    hover_pos, selected_shape, selected_tile_type = new_shape()
             # WASD keys to move the hover position
             elif event.key == pygame.K_w:
                 hover_pos = move_shape(hover_pos, (0, -1), selected_shape)
@@ -162,9 +173,10 @@ while running:
             elif event.key == pygame.K_d:
                 hover_pos = move_shape(hover_pos, (1, 0), selected_shape)
 
-    # screen.fill((0, 0, 0))  # Clear the screen with a black color
+    screen.fill((255, 255, 255))  # Clear the screen to prevent artifacts
+
     draw_board(screen)
-    draw_preview(screen, hover_pos, selected_shape)
+    draw_preview(screen, hover_pos, selected_shape, selected_tile_type)
     pygame.display.flip()
 
 # Quit Pygame
