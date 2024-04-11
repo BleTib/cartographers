@@ -104,8 +104,10 @@ SHAPES = {
 
 
 # Rotate the shape 90 degrees clockwise
-def rotate_shape(shape_positions):
-    return [(-pos[1], pos[0]) for pos in shape_positions]
+def rotate_shape(shape_positions, clockwise=True):
+    if clockwise:
+        return [(-pos[1], pos[0]) for pos in shape_positions]
+    return [(pos[1], -pos[0]) for pos in shape_positions]
 
 
 # Flip the shape horizontally
@@ -157,6 +159,8 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 selected_shape = rotate_shape(selected_shape)
+            if event.key == pygame.K_q:
+                selected_shape = rotate_shape(selected_shape, False)
             elif event.key == pygame.K_f:
                 selected_shape = flip_shape(selected_shape)
             elif event.key == pygame.K_e:
