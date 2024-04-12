@@ -33,18 +33,15 @@ def init_tiles(tiles_dict):
 
 TILES = init_tiles(TILES_DICT)
 
-# # Images for tiles
-# tiles = {
-#     0: load_tile("white.png"),
-#     1: load_tile("tree.png"),
-#     2: load_tile("water.png"),
-# }
+# Define shapes as lists of relative positions
+SHAPES = {
+    "3x1": [(0, -1), (0, 0), (0, 1)],
+    "Edge": [(0, 1), (0, 0), (1, 0)],
+    "L": [(-1, 0), (0, 0), (1, 0), (1, 1)],
+    "T": [(-1, -1), (-1, 0), (-1, 1), (0, 0), (1, 0)],
+    "t": [(0, -1), (0, 0), (0, 1), (1, 0)],
+}
 
-# # Semi-transparent tiles for preview
-# preview_tiles = {
-#     1: load_tile("tree.png", alpha=True),
-#     2: load_tile("water.png", alpha=True),
-# }
 
 # Create the window
 screen = pygame.display.set_mode(WINDOW_SIZE)
@@ -93,28 +90,6 @@ def place_tiles(board, pos, tile_type, shape_positions):
         board[col][row] = tile_type
 
 
-# Define shapes as lists of relative positions
-SHAPES = {
-    "3x1": [(0, -1), (0, 0), (0, 1)],
-    "Edge": [(0, 1), (0, 0), (1, 0)],
-    "L": [(-1, 0), (0, 0), (1, 0), (1, 1)],
-    "T": [(-1, -1), (-1, 0), (-1, 1), (0, 0), (1, 0)],
-    "t": [(0, -1), (0, 0), (0, 1), (1, 0)],
-}
-
-
-# Rotate the shape 90 degrees clockwise
-def rotate_shape(shape_positions, clockwise=True):
-    if clockwise:
-        return [(-pos[1], pos[0]) for pos in shape_positions]
-    return [(pos[1], -pos[0]) for pos in shape_positions]
-
-
-# Flip the shape horizontally
-def flip_shape(shape_positions):
-    return [(-pos[0], pos[1]) for pos in shape_positions]
-
-
 # hover position not going out of bounds
 def shape_out_of_bound(hover_pos, shape):
     min_x_offset = min(rel_pos[0] + hover_pos[0] for rel_pos in shape)
@@ -131,6 +106,26 @@ def shape_out_of_bound(hover_pos, shape):
     return False
 
 
+# Rotate the shape 90 degrees
+def rotate_shape(hover_pos, shape_positions, clockwise=True):
+    if clockwise:
+        new_positions = [(-pos[1], pos[0]) for pos in shape_positions]
+    else:
+        new_positions = [(pos[1], -pos[0]) for pos in shape_positions]
+
+    if shape_out_of_bound(hover_pos, new_positions):
+        return shape_positions
+    return new_positions
+
+
+# Flip the shape horizontally
+def flip_shape(hover_pos, shape_positions):
+    new_positions = [(-pos[0], pos[1]) for pos in shape_positions]
+    if shape_out_of_bound(hover_pos, new_positions):
+        return shape_positions
+    return new_positions
+
+
 def move_shape(hover_pos, new_pos_relative, selected_shape):
     new_pos = (hover_pos[0] + new_pos_relative[0], hover_pos[1] + new_pos_relative[1])
     if not shape_out_of_bound(new_pos, selected_shape):
@@ -145,24 +140,23 @@ def new_shape():
     return hover_pos, selected_shape, selected_tile_type
 
 
+# Initialize hover position and selected shape
 hover_pos, selected_shape, selected_tile_type = new_shape()
-
 
 # Main loop
 running = True
 while running:
 
-    # hover_pos = adjust_hover_pos(hover_pos, selected_shape)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
-                selected_shape = rotate_shape(selected_shape)
+                selected_shape = rotate_shape(hover_pos, selected_shape)
             if event.key == pygame.K_q:
-                selected_shape = rotate_shape(selected_shape, False)
+                selected_shape = rotate_shape(hover_pos, selected_shape, False)
             elif event.key == pygame.K_f:
-                selected_shape = flip_shape(selected_shape)
+                selected_shape = flip_shape(hover_pos, selected_shape)
             elif event.key == pygame.K_e:
                 if not tiles_overlap(board, hover_pos, selected_shape):
                     place_tiles(board, hover_pos, selected_tile_type, selected_shape)
