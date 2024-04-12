@@ -15,7 +15,7 @@ WINDOW_SIZE = (TILE_SIZE * BOARD_SIZE, TILE_SIZE * BOARD_SIZE)
 
 # Load images
 def load_tile(name, alpha=False):
-    path = os.path.join("images/tiles/basic", name)
+    path = os.path.join("images", "tiles", "basic", name)
     image = pygame.transform.scale(pygame.image.load(path), (TILE_SIZE, TILE_SIZE))
     if alpha:
         image.set_alpha(128)  # Set semi-transparent
