@@ -1,3 +1,6 @@
+import scoring_algorithms
+
+
 class ExploreCard:
     def __init__(self, image_path, name, timecost, types, shapes, coins):
         self.image_path = image_path
@@ -18,6 +21,30 @@ EXPLORE_CARDS = [
         [0],
     )
 ]
+
+
+class ScoringCard:
+    def __init__(self, image_path, name, scoring_algorithm):
+        self.image_path = image_path
+        self.name = name
+        self.scoring_algorithm = scoring_algorithm
+
+    def score(self, board):
+        return self.scoring_algorithm(board)
+
+
+SCORING_CARDS = {
+    "forest": [],
+    "village": [],
+    "land+water": [],
+    "space": [
+        ScoringCard(
+            "images/scoring_cards/borderlands.jpeg",
+            "Borderlands",
+            scoring_algorithms.score_borderlands,
+        )
+    ],
+}
 
 
 class Tile:

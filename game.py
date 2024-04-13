@@ -1,5 +1,6 @@
 import pygame
-from board import Board, TILES, GameState, init_screen
+from board import TILES, GameState, init_screen
+from cards import SCORING_CARDS
 import random
 
 SHAPES = {
@@ -26,7 +27,7 @@ def new_shape():
 
 # init board
 # init edicts and scoring cards
-
+SCORING_CARD = SCORING_CARDS["space"][0]
 # init season (both scoring cards
 
 # start game
@@ -35,7 +36,7 @@ def new_shape():
 pygame.init()
 screen = init_screen()
 
-season_time = 8
+season_time = 10
 timecost = 0
 
 # Main loop
@@ -50,5 +51,7 @@ while timecost < season_time and gamestate.running:
         timecost += 1
     gamestate.draw_board()
 
+score = SCORING_CARD.score(gamestate.board)
+print(score)
 # Quit Pygame
 pygame.quit()
