@@ -36,28 +36,28 @@ class ScoringCard:
 SCORING_CARDS = {
     "forest": [
         ScoringCard(
-            "images/scoring_cards/sentinelwood.jpeg",
+            "sentinelwood.jpeg",
             "Sentinel Wood",
             scoring_algorithms.score_sentinelwood,
         )
     ],
     "village": [
         ScoringCard(
-            "images/scoring_cards/wildholds.jpeg",
+            "wildholds.jpeg",
             "Wildholds",
             scoring_algorithms.score_wildholds,
         )
     ],
     "land+water": [
         ScoringCard(
-            "images/scoring_cards/canallake.jpeg",
+            "canallake.jpeg",
             "Canal Lake",
             scoring_algorithms.score_canallake,
         )
     ],
     "space": [
         ScoringCard(
-            "images/scoring_cards/borderlands.jpeg",
+            "borderlands.jpeg",
             "Borderlands",
             scoring_algorithms.score_borderlands,
         )

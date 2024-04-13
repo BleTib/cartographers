@@ -1,5 +1,5 @@
 import pygame
-from board import GameState, init_screen
+from board import GameState, init_scoring_card_images
 from cards import SCORING_CARDS
 import random
 
@@ -7,7 +7,7 @@ SHAPES = {
     "3x1": [(0, -1), (0, 0), (0, 1)],
     "Edge": [(0, 1), (0, 0), (1, 0)],
     "L": [(-1, 0), (0, 0), (1, 0), (1, 1)],
-    "T": [(-1, -1), (-1, 0), (-1, 1), (0, 0), (1, 0)],
+    # "T": [(-1, -1), (-1, 0), (-1, 1), (0, 0), (1, 0)],
     "t": [(0, -1), (0, 0), (0, 1), (1, 0)],
 }
 
@@ -39,7 +39,10 @@ def init_scoring_cards():
         scoring_cards.append(random.choice(stack))
     random.shuffle(scoring_cards)
     edicts = ["A", "B", "C", "D"]
-    return {edict: scoring_card for edict, scoring_card in zip(edicts, scoring_cards)}
+    edicts = {edict: scoring_card for edict, scoring_card in zip(edicts, scoring_cards)}
+    init_scoring_card_images(edicts)
+
+    return edicts
 
 
 # explore phase
@@ -57,19 +60,17 @@ def init_scoring_cards():
 # for scorings in seasons:
 
 pygame.init()
-screen = init_screen()
 
 edicts = init_scoring_cards()
 
-
 # Main loop
 selected_shape, selected_tile_type = new_shape()
-gamestate = GameState(screen, selected_shape, selected_tile_type)
+gamestate = GameState(selected_shape, selected_tile_type, edicts)
 score = 0
 for season in SEASONS:
     if not gamestate.running:
         break
-
+    gamestate.update_edicts(season.edicts)
     print()
     print("Season:", season.name)
     print("Time:", season.time)

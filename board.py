@@ -21,12 +21,49 @@ TILES_DICT = {
 
 class Board:
     # Constants for the board size
-    BOARD_SIZE = 11
-    TILE_SIZE = 32  # Size of the square tile
-    WINDOW_SIZE = (TILE_SIZE * BOARD_SIZE, TILE_SIZE * BOARD_SIZE)
+    NR_OF_TILES = 11
+    TILE_SIZE = 40  # Size of the square tile
+    BOARD_SIZE = NR_OF_TILES * TILE_SIZE
+
+    CARD_SIZE = (200, 300)
+    SPACING = 10
+
+    BOARD_LOCAITON = (SPACING, CARD_SIZE[1] + SPACING * 2)
+
+    WINDOW_SIZE = (
+        CARD_SIZE[0] * 4 + SPACING * 5,
+        TILE_SIZE * NR_OF_TILES + CARD_SIZE[1] + SPACING * 3,
+    )
 
 
-# Load images
+# Create the window
+def init_screen():
+
+    screen = pygame.display.set_mode(Board.WINDOW_SIZE)
+    pygame.display.set_caption("Land Board")
+    screen.fill((255, 255, 255))
+
+    return screen
+
+
+# Load tile images
+def load_scoring_card(name, alpha=False):
+    path = os.path.join("images", "scoring_cards", name)
+    image = pygame.transform.scale(pygame.image.load(path), Board.CARD_SIZE)
+    if alpha:
+        image.set_alpha(128)  # Set semi-transparent
+    return image
+
+
+def init_scoring_card_images(edicts):
+    for _, scoring_card in edicts.items():
+        scoring_card.img = load_scoring_card(scoring_card.image_path)
+        scoring_card.img_prev = load_scoring_card(scoring_card.image_path, alpha=True)
+
+    return edicts
+
+
+# Load tile images
 def load_tile(name, alpha=False):
     path = os.path.join("images", "tiles", "basic", name)
     image = pygame.transform.scale(
@@ -49,13 +86,6 @@ def init_tiles(tiles_dict):
 TILES = init_tiles(TILES_DICT)
 
 
-# Create the window
-def init_screen():
-    screen = pygame.display.set_mode(Board.WINDOW_SIZE)
-    pygame.display.set_caption("Land Board")
-    return screen
-
-
 # Function to draw the preview based on relative positions
 def draw_preview(screen, preview_pos, shape_positions, selected_tile_type):
     if preview_pos:
@@ -65,12 +95,12 @@ def draw_preview(screen, preview_pos, shape_positions, selected_tile_type):
                 preview_pos[1] + rel_pos[1],
             )
             if (
-                0 <= preview_col < Board.BOARD_SIZE
-                and 0 <= preview_row < Board.BOARD_SIZE
+                0 <= preview_col < Board.NR_OF_TILES
+                and 0 <= preview_row < Board.NR_OF_TILES
             ):
                 preview_tile = (
-                    preview_col * Board.TILE_SIZE,
-                    preview_row * Board.TILE_SIZE,
+                    preview_col * Board.TILE_SIZE + Board.BOARD_LOCAITON[0],
+                    preview_row * Board.TILE_SIZE + Board.BOARD_LOCAITON[1],
                 )
                 screen.blit(TILES[selected_tile_type].img_prev, preview_tile)
 
@@ -78,7 +108,7 @@ def draw_preview(screen, preview_pos, shape_positions, selected_tile_type):
 def tiles_overlap(board, pos, shape_positions):
     for rel_pos in shape_positions:
         col, row = pos[0] + rel_pos[0], pos[1] + rel_pos[1]
-        if 0 <= col < Board.BOARD_SIZE and 0 <= row < Board.BOARD_SIZE:
+        if 0 <= col < Board.NR_OF_TILES and 0 <= row < Board.NR_OF_TILES:
             # Check if a tile already exists at this position
             if board[col][row] != 0:
                 return True
@@ -101,8 +131,8 @@ def shape_out_of_bound(hover_pos, shape):
     if (
         min_x_offset < 0
         or min_y_offset < 0
-        or max_x_offset >= Board.BOARD_SIZE
-        or max_y_offset >= Board.BOARD_SIZE
+        or max_x_offset >= Board.NR_OF_TILES
+        or max_y_offset >= Board.NR_OF_TILES
     ):
         return True
     return False
@@ -136,27 +166,44 @@ def move_shape(hover_pos, new_pos_relative, selected_shape):
 
 
 class GameState:
-    def __init__(self, screen, selected_shape, selected_tile_type):
+    def __init__(self, selected_shape, selected_tile_type, edicts):
         self.board = [
-            [0 for _ in range(Board.BOARD_SIZE)] for _ in range(Board.BOARD_SIZE)
+            [0 for _ in range(Board.NR_OF_TILES)] for _ in range(Board.NR_OF_TILES)
         ]
-        self.screen = screen
-        self.hover_pos = (Board.BOARD_SIZE // 2, Board.BOARD_SIZE // 2)
+        self.screen = init_screen()
+        self.hover_pos = (Board.NR_OF_TILES // 2, Board.NR_OF_TILES // 2)
         self.selected_shape = selected_shape
         self.selected_tile_type = selected_tile_type
+        self.edicts = edicts
         self.running = True
         self.drawn = False
 
     def new_shape(self, selected_shape, selected_tile_type):
-        self.hover_pos = (Board.BOARD_SIZE // 2, Board.BOARD_SIZE // 2)
+        self.hover_pos = (Board.NR_OF_TILES // 2, Board.NR_OF_TILES // 2)
         self.selected_shape = selected_shape
         self.selected_tile_type = selected_tile_type
 
+    def update_edicts(self, active_edicts):
+        self.screen.fill((255, 255, 255))
+
+        edicts = ["A", "B", "C", "D"]
+        for i, key in enumerate(edicts):
+            image = (
+                self.edicts[key].img
+                if key in active_edicts
+                else self.edicts[key].img_prev
+            )
+            position = (Board.SPACING * (i + 1) + Board.CARD_SIZE[0] * i, Board.SPACING)
+            self.screen.blit(image, position)
+
     # Function to draw/update the current board
     def _update_board(self):
-        for col in range(Board.BOARD_SIZE):
-            for row in range(Board.BOARD_SIZE):
-                tile = (col * Board.TILE_SIZE, row * Board.TILE_SIZE)
+        for col in range(Board.NR_OF_TILES):
+            for row in range(Board.NR_OF_TILES):
+                tile = (
+                    col * Board.TILE_SIZE + Board.BOARD_LOCAITON[0],
+                    row * Board.TILE_SIZE + Board.BOARD_LOCAITON[1],
+                )
                 type = self.board[col][row]
                 self.screen.blit(TILES[type].img, tile)
 
@@ -207,7 +254,7 @@ class GameState:
                         self.hover_pos, (1, 0), self.selected_shape
                     )
 
-        self.screen.fill((255, 255, 255))  # Clear the screen to prevent artifacts
+        # self.screen.fill((255, 255, 255))  # Clear the screen to prevent artifacts
         self._update_board()
         draw_preview(
             self.screen, self.hover_pos, self.selected_shape, self.selected_tile_type
