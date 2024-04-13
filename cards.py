@@ -42,7 +42,13 @@ SCORING_CARDS = {
             scoring_algorithms.score_wildholds,
         )
     ],
-    "land+water": [],
+    "land+water": [
+        ScoringCard(
+            "images/scoring_cards/canallake.jpeg",
+            "Canal Lake",
+            scoring_algorithms.score_canallake,
+        )
+    ],
     "space": [
         ScoringCard(
             "images/scoring_cards/borderlands.jpeg",

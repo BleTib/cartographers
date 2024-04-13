@@ -35,3 +35,34 @@ def score_wildholds(board):
 
     # 8 points for each cluster of 6 or more villages
     return sum(8 for cluster in clusters if len(cluster) >= 6)
+
+
+def score_canallake(board):
+    def check_neighbours(board, x, y, value):
+        potential_neighbours = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+
+        # Filter out the neighbours that are out of bounds
+        valid_neighbours = [
+            (x, y)
+            for x, y in potential_neighbours
+            if 0 <= x < len(board) and 0 <= y < len(board[0])
+        ]
+        # Check the valid neighbours
+        for x, y in valid_neighbours:
+            if board[x][y] == value:
+                return True
+        return False
+
+    scoring_board = np.zeros((len(board), len(board[0])), dtype=int)
+    for x in range(len(board)):
+        for y in range(len(board[0])):
+            if board[x][y] == TILES_DICT["water"].val and check_neighbours(
+                board, x, y, TILES_DICT["farm"].val
+            ):
+                scoring_board[x][y] = 1
+            elif board[x][y] == TILES_DICT["farm"].val and check_neighbours(
+                board, x, y, TILES_DICT["water"].val
+            ):
+                scoring_board[x][y] = 1
+
+    return sum(sum(scoring_board))
