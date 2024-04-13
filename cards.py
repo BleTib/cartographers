@@ -34,7 +34,13 @@ class ScoringCard:
 
 
 SCORING_CARDS = {
-    "forest": [],
+    "forest": [
+        ScoringCard(
+            "images/scoring_cards/sentinelwood.jpeg",
+            "Sentinel Wood",
+            scoring_algorithms.score_sentinelwood,
+        )
+    ],
     "village": [
         ScoringCard(
             "images/scoring_cards/wildholds.jpeg",

@@ -66,3 +66,25 @@ def score_canallake(board):
                 scoring_board[x][y] = 1
 
     return sum(sum(scoring_board))
+
+
+def score_sentinelwood(board):
+    rows, cols = len(board), len(board[0])
+    forest_tile = TILES_DICT["forest"].val
+    score = 0
+
+    # Traverse top and bottom edge
+    for j in range(cols):
+        if board[0][j] == forest_tile:
+            score += 1
+        if board[rows - 1][j] == forest_tile:
+            score += 1
+
+    # Traverse the left and right edge and skip corners as they are already covered
+    for i in range(1, rows - 1):
+        if board[i][0] == forest_tile:
+            score += 1
+        if board[i][cols - 1] == forest_tile:
+            score += 1
+
+    return score
