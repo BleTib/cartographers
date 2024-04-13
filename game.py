@@ -14,7 +14,7 @@ SHAPES = {
 
 def new_shape():
     selected_shape = SHAPES[random.choice(list(SHAPES.keys()))]
-    selected_tile_type = random.randint(1, len(TILES) - 1)
+    selected_tile_type = random.randint(1, 4)
     return selected_shape, selected_tile_type
 
 
@@ -27,7 +27,6 @@ def new_shape():
 
 # init board
 # init edicts and scoring cards
-SCORING_CARD = SCORING_CARDS["space"][0]
 # init season (both scoring cards
 
 # start game
@@ -51,7 +50,8 @@ while timecost < season_time and gamestate.running:
         timecost += 1
     gamestate.draw_board()
 
-score = SCORING_CARD.score(gamestate.board)
-print(score)
+score1 = SCORING_CARDS["space"][0].score(gamestate.board)
+score2 = SCORING_CARDS["village"][0].score(gamestate.board)
+print(score1, score2)
 # Quit Pygame
 pygame.quit()
