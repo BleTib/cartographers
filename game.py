@@ -1,5 +1,5 @@
 import pygame
-from board import TILES, GameState, init_screen
+from board import GameState, init_screen
 from cards import SCORING_CARDS
 import random
 
@@ -12,10 +12,34 @@ SHAPES = {
 }
 
 
+class Season:
+    def __init__(self, key, time, edicts):
+        self.name = key
+        self.time = time
+        self.edicts = edicts
+
+
+SEASONS = [
+    Season("Spring", 8, ["A", "B"]),
+    Season("Summer", 8, ["B", "C"]),
+    Season("Fall", 7, ["C", "D"]),
+    Season("Winter", 6, ["D", "A"]),
+]
+
+
 def new_shape():
     selected_shape = SHAPES[random.choice(list(SHAPES.keys()))]
     selected_tile_type = random.randint(1, 4)
     return selected_shape, selected_tile_type
+
+
+def init_scoring_cards():
+    scoring_cards = []
+    for _, stack in SCORING_CARDS.items():
+        scoring_cards.append(random.choice(stack))
+    random.shuffle(scoring_cards)
+    edicts = ["A", "B", "C", "D"]
+    return {edict: scoring_card for edict, scoring_card in zip(edicts, scoring_cards)}
 
 
 # explore phase
@@ -35,23 +59,55 @@ def new_shape():
 pygame.init()
 screen = init_screen()
 
-season_time = 10
-timecost = 0
+edicts = init_scoring_cards()
+
 
 # Main loop
 selected_shape, selected_tile_type = new_shape()
 gamestate = GameState(screen, selected_shape, selected_tile_type)
+score = 0
+for season in SEASONS:
+    if not gamestate.running:
+        break
 
-while timecost < season_time and gamestate.running:
-    if gamestate.drawn:
-        print("timecost", timecost)
-        selected_shape, selected_tile_type = new_shape()
-        gamestate.new_shape(selected_shape, selected_tile_type)
-        timecost += 1
-    gamestate.draw_board()
+    print()
+    print("Season:", season.name)
+    print("Time:", season.time)
+    print(
+        "Edicts:",
+        season.edicts[0] + " - " + edicts[season.edicts[0]].name + " | ",
+        season.edicts[1] + " - " + edicts[season.edicts[1]].name,
+    )
+    print()
 
-score1 = SCORING_CARDS["space"][0].score(gamestate.board)
-score2 = SCORING_CARDS["village"][0].score(gamestate.board)
-print(score1, score2)
-# Quit Pygame
+    timecost = 0
+    while timecost < season.time and gamestate.running:
+        if gamestate.drawn:
+            print("timecost", timecost)
+            selected_shape, selected_tile_type = new_shape()
+            gamestate.new_shape(selected_shape, selected_tile_type)
+            timecost += 1
+        gamestate.draw_board()
+
+    score1 = edicts[season.edicts[0]].score(gamestate.board)
+    score2 = edicts[season.edicts[1]].score(gamestate.board)
+    score += score1 + score2
+    print(
+        "Score {}: {}".format(
+            season.edicts[0] + " - " + edicts[season.edicts[0]].name, score1
+        )
+    )
+    print(
+        "Score {}: {}".format(
+            season.edicts[1] + " - " + edicts[season.edicts[1]].name, score2
+        )
+    )
+    print("Total Score:", score)
+
+# Wait until Quit Pygame
+while gamestate.running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            gamestate.running = False
+
 pygame.quit()
