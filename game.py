@@ -46,10 +46,10 @@ def init_scoring_cards():
 
 
 def init_explore_cards():
-    explore_cards = EXPLORE_CARDS
+    explore_cards = EXPLORE_CARDS.copy()
     random.shuffle(explore_cards)
     init_explore_card_images(explore_cards)
-
+    print("!!!")
     return explore_cards
 
 
@@ -70,7 +70,6 @@ def init_explore_cards():
 pygame.init()
 
 edicts = init_scoring_cards()
-explore_cards = init_explore_cards()
 
 # Main loop
 selected_shape, selected_tile_type = new_shape()
@@ -80,6 +79,7 @@ for season in SEASONS:
     if not gamestate.running:
         break
     gamestate.update_edicts(season.edicts)
+    explore_cards = init_explore_cards()
     print()
     print("Season:", season.name)
     print("Time:", season.time)
@@ -95,10 +95,8 @@ for season in SEASONS:
     gamestate.drawn = True  # that if clause can be accessed
     while timecost < season.time and gamestate.running:
         if gamestate.drawn:
-            explore_card = explore_cards[0]
+            explore_card = explore_cards.pop()
             gamestate.update_explore_card(explore_card)
-            # selected_shape, selected_tile_type = new_shape()
-            # gamestate.new_shape(selected_shape, selected_tile_type)
             timecost += explore_card.timecost
             print("timecost", timecost)
         gamestate.draw_board()

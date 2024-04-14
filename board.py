@@ -241,9 +241,9 @@ class GameState:
             if self.explore_card_shape_pointer == len(self.explore_card.shapes):
                 self.explore_card_shape_pointer = 0
 
-            self.selected_shape = TILES_DICT[
-                self.explore_card.shapes[self.explore_card_type_pointer]
-            ].val
+            self.selected_shape = self.explore_card.shapes[
+                self.explore_card_shape_pointer
+            ]
 
     # Function to draw/update the current board
     def _update_board(self):
