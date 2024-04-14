@@ -205,7 +205,9 @@ class GameState:
         self.selected_tile_type = selected_tile_type
 
     def update_edicts(self, active_edicts):
-        self.screen.fill((255, 255, 255))
+        # (x, y, width, height)
+        rect = (0, 0, Board.WINDOW_SIZE[0], Board.CARD_SIZE[1] + Board.SPACING * 2)
+        self.screen.fill((255, 255, 255), rect)
 
         edicts = ["A", "B", "C", "D"]
         for i, key in enumerate(edicts):
