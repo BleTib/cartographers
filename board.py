@@ -24,12 +24,14 @@ class Board:
     NR_OF_TILES = 11
     TILE_SIZE = 40  # Size of the square tile
     BOARD_SIZE = NR_OF_TILES * TILE_SIZE
-
     CARD_SIZE = (200, 300)
     SPACING = 10
 
-    BOARD_LOCAITON = (SPACING, CARD_SIZE[1] + SPACING * 2)
-
+    BOARD_LOCATION = (SPACING, CARD_SIZE[1] + SPACING * 2)
+    EXPLORE_CARD_LOCATION = (
+        SPACING * 2 + BOARD_SIZE,
+        SPACING * 2 + CARD_SIZE[1],
+    )
     WINDOW_SIZE = (
         CARD_SIZE[0] * 4 + SPACING * 5,
         TILE_SIZE * NR_OF_TILES + CARD_SIZE[1] + SPACING * 3,
@@ -46,7 +48,6 @@ def init_screen():
     return screen
 
 
-# Load tile images
 def load_scoring_card(name, alpha=False):
     path = os.path.join("images", "scoring_cards", name)
     image = pygame.transform.scale(pygame.image.load(path), Board.CARD_SIZE)
@@ -61,6 +62,20 @@ def init_scoring_card_images(edicts):
         scoring_card.img_prev = load_scoring_card(scoring_card.image_path, alpha=True)
 
     return edicts
+
+
+def load_explore_card(name):
+    path = os.path.join("images", "explore_cards", name)
+    image = pygame.transform.scale(pygame.image.load(path), Board.CARD_SIZE)
+
+    return image
+
+
+def init_explore_card_images(cards):
+    for card in cards:
+        card.img = load_explore_card(card.image_path)
+
+    return cards
 
 
 # Load tile images
@@ -99,8 +114,8 @@ def draw_preview(screen, preview_pos, shape_positions, selected_tile_type):
                 and 0 <= preview_row < Board.NR_OF_TILES
             ):
                 preview_tile = (
-                    preview_col * Board.TILE_SIZE + Board.BOARD_LOCAITON[0],
-                    preview_row * Board.TILE_SIZE + Board.BOARD_LOCAITON[1],
+                    preview_col * Board.TILE_SIZE + Board.BOARD_LOCATION[0],
+                    preview_row * Board.TILE_SIZE + Board.BOARD_LOCATION[1],
                 )
                 screen.blit(TILES[selected_tile_type].img_prev, preview_tile)
 
@@ -165,7 +180,7 @@ def move_shape(hover_pos, new_pos_relative, selected_shape):
     return hover_pos
 
 
-def normal_board():
+def init_normal_board():
     board = [[0 for _ in range(Board.NR_OF_TILES)] for _ in range(Board.NR_OF_TILES)]
     mountains = [(3, 1), (8, 2), (5, 5), (2, 8), (7, 10)]
     for mountain in mountains:
@@ -175,7 +190,7 @@ def normal_board():
 
 class GameState:
     def __init__(self, selected_shape, selected_tile_type, edicts):
-        self.board = normal_board()
+        self.board = init_normal_board()
         self.screen = init_screen()
         self.hover_pos = (Board.NR_OF_TILES // 2, Board.NR_OF_TILES // 2)
         self.selected_shape = selected_shape
@@ -202,13 +217,39 @@ class GameState:
             position = (Board.SPACING * (i + 1) + Board.CARD_SIZE[0] * i, Board.SPACING)
             self.screen.blit(image, position)
 
+    def update_explore_card(self, explore_card):
+        print("update explore card")
+        self.explore_card = explore_card
+        self.explore_card_type_pointer = 0
+        self.explore_card_shape_pointer = 0
+        self.new_shape(explore_card.shapes[0], TILES_DICT[explore_card.types[0]].val)
+        self.screen.blit(explore_card.img, Board.EXPLORE_CARD_LOCATION)
+
+    def _explore_card_switch(self):
+        if len(self.explore_card.types) > 1:
+            self.explore_card_type_pointer += 1
+            if self.explore_card_type_pointer == len(self.explore_card.types):
+                self.explore_card_type_pointer = 0
+
+            self.selected_tile_type = TILES_DICT[
+                self.explore_card.types[self.explore_card_type_pointer]
+            ].val
+        elif len(self.explore_card.shapes) > 1:
+            self.explore_card_shape_pointer += 1
+            if self.explore_card_shape_pointer == len(self.explore_card.shapes):
+                self.explore_card_shape_pointer = 0
+
+            self.selected_shape = TILES_DICT[
+                self.explore_card.shapes[self.explore_card_type_pointer]
+            ].val
+
     # Function to draw/update the current board
     def _update_board(self):
         for col in range(Board.NR_OF_TILES):
             for row in range(Board.NR_OF_TILES):
                 tile = (
-                    col * Board.TILE_SIZE + Board.BOARD_LOCAITON[0],
-                    row * Board.TILE_SIZE + Board.BOARD_LOCAITON[1],
+                    col * Board.TILE_SIZE + Board.BOARD_LOCATION[0],
+                    row * Board.TILE_SIZE + Board.BOARD_LOCATION[1],
                 )
                 type = self.board[col][row]
                 self.screen.blit(TILES[type].img, tile)
@@ -242,6 +283,9 @@ class GameState:
                             self.selected_shape,
                         )
                         self.drawn = True
+                elif event.key == pygame.K_t:
+                    self._explore_card_switch()
+
                 # WASD keys to move the hover position
                 elif event.key == pygame.K_w:
                     self.hover_pos = move_shape(

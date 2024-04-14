@@ -1,6 +1,6 @@
 import pygame
-from board import GameState, init_scoring_card_images
-from cards import SCORING_CARDS
+from board import GameState, init_scoring_card_images, init_explore_card_images
+from cards import SCORING_CARDS, EXPLORE_CARDS
 import random
 
 SHAPES = {
@@ -45,6 +45,14 @@ def init_scoring_cards():
     return edicts
 
 
+def init_explore_cards():
+    explore_cards = EXPLORE_CARDS
+    random.shuffle(explore_cards)
+    init_explore_card_images(explore_cards)
+
+    return explore_cards
+
+
 # explore phase
 # draw a exploration card
 # if ruin is drawn draw another one
@@ -62,6 +70,7 @@ def init_scoring_cards():
 pygame.init()
 
 edicts = init_scoring_cards()
+explore_cards = init_explore_cards()
 
 # Main loop
 selected_shape, selected_tile_type = new_shape()
@@ -81,13 +90,17 @@ for season in SEASONS:
     )
     print()
 
+    # Season rounds
     timecost = 0
+    gamestate.drawn = True  # that if clause can be accessed
     while timecost < season.time and gamestate.running:
         if gamestate.drawn:
+            explore_card = explore_cards[0]
+            gamestate.update_explore_card(explore_card)
+            # selected_shape, selected_tile_type = new_shape()
+            # gamestate.new_shape(selected_shape, selected_tile_type)
+            timecost += explore_card.timecost
             print("timecost", timecost)
-            selected_shape, selected_tile_type = new_shape()
-            gamestate.new_shape(selected_shape, selected_tile_type)
-            timecost += 1
         gamestate.draw_board()
 
     score1 = edicts[season.edicts[0]].score(gamestate.board)

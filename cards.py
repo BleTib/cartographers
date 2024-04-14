@@ -13,11 +13,11 @@ class ExploreCard:
 
 EXPLORE_CARDS = [
     ExploreCard(
-        "images/explore_cards/fishing_village.jpg",
+        "fishing_village.jpg",
         "Fishing Village",
         2,
         ["village", "water"],
-        [(0, -1), (0, 0), (0, 1), (0, 2)],
+        [[(0, -1), (0, 0), (0, 1), (0, 2)]],
         [0],
     )
 ]
