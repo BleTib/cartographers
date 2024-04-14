@@ -165,11 +165,17 @@ def move_shape(hover_pos, new_pos_relative, selected_shape):
     return hover_pos
 
 
+def normal_board():
+    board = [[0 for _ in range(Board.NR_OF_TILES)] for _ in range(Board.NR_OF_TILES)]
+    mountains = [(3, 1), (8, 2), (5, 5), (2, 8), (7, 10)]
+    for mountain in mountains:
+        board[mountain[0]][mountain[1]] = 6
+    return board
+
+
 class GameState:
     def __init__(self, selected_shape, selected_tile_type, edicts):
-        self.board = [
-            [0 for _ in range(Board.NR_OF_TILES)] for _ in range(Board.NR_OF_TILES)
-        ]
+        self.board = normal_board()
         self.screen = init_screen()
         self.hover_pos = (Board.NR_OF_TILES // 2, Board.NR_OF_TILES // 2)
         self.selected_shape = selected_shape
