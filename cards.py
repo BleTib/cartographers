@@ -13,13 +13,77 @@ class ExploreCard:
 
 EXPLORE_CARDS = [
     ExploreCard(
+        "great_river.jpg",
+        "Great River",
+        1,
+        ["water"],
+        [[(0, -1), (0, 0), (0, 1)], [(0, 0), (0, 1), (-1, 1), (1, 0), (1, -1)]],
+        [1, 0],
+    ),
+    ExploreCard(
+        "farmland.jpg",
+        "Farmland",
+        1,
+        ["farm"],
+        [[(0, 0), (0, -1)], [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0)]],
+        [1, 0],
+    ),
+    ExploreCard(
+        "hamlet.jpg",
+        "Hamlet",
+        1,
+        ["village"],
+        [[(0, 0), (0, -1), (1, 0)], [(-1, 0), (0, 0), (-1, -1), (0, -1), (1, -1)]],
+        [1, 0],
+    ),
+    ExploreCard(
+        "forgotten_forest.jpg",
+        "Forgotten Forest",
+        1,
+        ["forest"],
+        [[(0, 0), (1, 1)], [(0, -1), (0, 0), (1, 0), (1, 1)]],
+        [1, 0],
+    ),
+    ExploreCard(
+        "hinterland_stream.jpg",
+        "Hinterland Stream",
+        2,
+        ["farm", "water"],
+        [[(0, 2), (0, 1), (0, 0), (1, 0), (2, 0)]],
+        [0],
+    ),
+    ExploreCard(
+        "orchard.jpg",
+        "Orchard",
+        2,
+        ["forest", "farm"],
+        [[(-1, 0), (0, 0), (1, 0), (1, 1)]],
+        [0],
+    ),
+    ExploreCard(
+        "treetop_village.jpg",
+        "Treetop Village",
+        2,
+        ["forest", "village"],
+        [[(-2, 0), (-1, 0), (0, 0), (0, -1), (1, -1)]],
+        [0],
+    ),
+    ExploreCard(
         "fishing_village.jpg",
         "Fishing Village",
         2,
         ["village", "water"],
-        [[(0, -1), (0, 0), (0, 1), (0, 2)]],
+        [[(-2, 0), (-1, 0), (0, 0), (1, 0)]],
         [0],
-    )
+    ),
+    ExploreCard(
+        "rift_lands.jpg",
+        "Rift Lands",
+        0,
+        ["forest", "village", "farm", "water", "monster"],
+        [[(0, 0)]],
+        [0],
+    ),
 ]
 
 
