@@ -236,14 +236,17 @@ class GameState:
             self.selected_tile_type = TILES_DICT[
                 self.explore_card.types[self.explore_card_type_pointer]
             ].val
+            
         elif len(self.explore_card.shapes) > 1:
-            self.explore_card_shape_pointer += 1
-            if self.explore_card_shape_pointer == len(self.explore_card.shapes):
-                self.explore_card_shape_pointer = 0
 
-            self.selected_shape = self.explore_card.shapes[
-                self.explore_card_shape_pointer
-            ]
+            self.explore_card_shape_pointer = 1 - self.explore_card_shape_pointer
+
+            new_shape = self.explore_card.shapes[self.explore_card_shape_pointer]
+
+            if shape_out_of_bound(self.hover_pos, new_shape):
+                self.explore_card_shape_pointer = 1 - self.explore_card_shape_pointer
+            else:
+                self.selected_shape = new_shape
 
     # Function to draw/update the current board
     def _update_board(self):
