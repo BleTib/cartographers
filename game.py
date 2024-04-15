@@ -95,7 +95,7 @@ for season in SEASONS:
 
     score1 = edicts[season.edicts[0]].score(gamestate.board)
     score2 = edicts[season.edicts[1]].score(gamestate.board)
-    score += score1 + score2
+    score += score1 + score2 + gamestate.coins
     print(
         "Score {}: {}".format(
             season.edicts[0] + " - " + edicts[season.edicts[0]].name, score1
@@ -106,6 +106,7 @@ for season in SEASONS:
             season.edicts[1] + " - " + edicts[season.edicts[1]].name, score2
         )
     )
+    print("Coins:", gamestate.coins)
     print("Total Score:", score)
 
 # Wait until Quit Pygame
