@@ -19,7 +19,7 @@ TILES_DICT = {
 }
 
 
-class Board:
+class Window:
     # Constants for the board size
     NR_OF_TILES = 11
     TILE_SIZE = 40  # Size of the square tile
@@ -40,8 +40,7 @@ class Board:
 
 # Create the window
 def init_screen():
-
-    screen = pygame.display.set_mode(Board.WINDOW_SIZE)
+    screen = pygame.display.set_mode(Window.WINDOW_SIZE)
     pygame.display.set_caption("Land Board")
     screen.fill((255, 255, 255))
 
@@ -50,9 +49,10 @@ def init_screen():
 
 def load_scoring_card(name, alpha=False):
     path = os.path.join("images", "scoring_cards", name)
-    image = pygame.transform.scale(pygame.image.load(path), Board.CARD_SIZE)
+    image = pygame.transform.scale(pygame.image.load(path), Window.CARD_SIZE)
     if alpha:
         image.set_alpha(128)  # Set semi-transparent
+
     return image
 
 
@@ -66,7 +66,7 @@ def init_scoring_card_images(edicts):
 
 def load_explore_card(name):
     path = os.path.join("images", "explore_cards", name)
-    image = pygame.transform.scale(pygame.image.load(path), Board.CARD_SIZE)
+    image = pygame.transform.scale(pygame.image.load(path), Window.CARD_SIZE)
 
     return image
 
@@ -82,10 +82,11 @@ def init_explore_card_images(cards):
 def load_tile(name, alpha=False):
     path = os.path.join("images", "tiles", "basic", name)
     image = pygame.transform.scale(
-        pygame.image.load(path), (Board.TILE_SIZE, Board.TILE_SIZE)
+        pygame.image.load(path), (Window.TILE_SIZE, Window.TILE_SIZE)
     )
     if alpha:
         image.set_alpha(128)  # Set semi-transparent
+
     return image
 
 
@@ -101,98 +102,178 @@ def init_tiles(tiles_dict):
 TILES = init_tiles(TILES_DICT)
 
 
-# Function to draw the preview based on relative positions
-def draw_preview(screen, preview_pos, shape_positions, selected_tile_type):
-    if preview_pos:
-        for rel_pos in shape_positions:
+class Boards:
+
+    def init_normal_board():
+        board = [
+            [0 for _ in range(Window.NR_OF_TILES)] for _ in range(Window.NR_OF_TILES)
+        ]
+        mountains = [(3, 1), (8, 2), (5, 5), (2, 8), (7, 9)]
+        for mountain in mountains:
+            board[mountain[0]][mountain[1]] = 6
+        return board
+
+
+class DrawManager:
+    def __init__(self, game_state):
+        self.gs = game_state
+
+    def _shape_out_of_bound(self, hover_pos, shape):
+        """Hover position not going out of bounds"""
+        min_x_offset = min(rel_pos[0] + hover_pos[0] for rel_pos in shape)
+        min_y_offset = min(rel_pos[1] + hover_pos[1] for rel_pos in shape)
+        max_x_offset = max(rel_pos[0] + hover_pos[0] for rel_pos in shape)
+        max_y_offset = max(rel_pos[1] + hover_pos[1] for rel_pos in shape)
+        if (
+            min_x_offset < 0
+            or min_y_offset < 0
+            or max_x_offset >= Window.NR_OF_TILES
+            or max_y_offset >= Window.NR_OF_TILES
+        ):
+            return True
+        return False
+
+    def tiles_overlap(self):
+        for rel_pos in self.gs.selected_shape:
+            col, row = (
+                self.gs.hover_pos[0] + rel_pos[0],
+                self.gs.hover_pos[1] + rel_pos[1],
+            )
+            if 0 <= col < Window.NR_OF_TILES and 0 <= row < Window.NR_OF_TILES:
+                # Check if a tile already exists at this position
+                if self.gs.board[col][row] != 0:
+                    return True
+        return False
+
+    def explore_card_switch(self):
+        """Switch between the different types or shapes of the explore card."""
+        if len(self.gs.explore_card.types) > 1:
+            self.gs.explore_card_type_pointer += 1
+            if self.gs.explore_card_type_pointer == len(self.gs.explore_card.types):
+                self.gs.explore_card_type_pointer = 0
+
+            self.gs.selected_tile_type = TILES_DICT[
+                self.gs.explore_card.types[self.gs.explore_card_type_pointer]
+            ].val
+
+        elif len(self.gs.explore_card.shapes) > 1:
+            self.gs.explore_card_shape_pointer = 1 - self.gs.explore_card_shape_pointer
+
+            new_shape = self.gs.explore_card.shapes[self.gs.explore_card_shape_pointer]
+
+            if self._shape_out_of_bound(self.gs.hover_pos, new_shape):
+                self.gs.explore_card_shape_pointer = (
+                    1 - self.gs.explore_card_shape_pointer
+                )
+            else:
+                self.gs.selected_shape = new_shape
+
+    def rotate_shape(self, clockwise=True):
+        if clockwise:
+            new_positions = [(-pos[1], pos[0]) for pos in self.gs.selected_shape]
+        else:
+            new_positions = [(pos[1], -pos[0]) for pos in self.gs.selected_shape]
+
+        if self._shape_out_of_bound(self.gs.hover_pos, new_positions):
+            return self.gs.selected_shape
+        return new_positions
+
+    def flip_shape(self):
+        new_positions = [(-pos[0], pos[1]) for pos in self.gs.selected_shape]
+        if self._shape_out_of_bound(self.gs.hover_pos, new_positions):
+            return self.gs.selected_shape
+        return new_positions
+
+    def move_shape(self, new_pos_relative):
+        new_hover_pos = (
+            self.gs.hover_pos[0] + new_pos_relative[0],
+            self.gs.hover_pos[1] + new_pos_relative[1],
+        )
+        if not self._shape_out_of_bound(new_hover_pos, self.gs.selected_shape):
+            return new_hover_pos
+        return self.gs.hover_pos
+
+    def place_tiles(self):
+        for rel_pos in self.gs.selected_shape:
+            col, row = (
+                self.gs.hover_pos[0] + rel_pos[0],
+                self.gs.hover_pos[1] + rel_pos[1],
+            )
+            self.gs.board[col][row] = self.gs.selected_tile_type
+
+    def draw_preview(self):
+        for rel_pos in self.gs.selected_shape:
             preview_col, preview_row = (
-                preview_pos[0] + rel_pos[0],
-                preview_pos[1] + rel_pos[1],
+                self.gs.hover_pos[0] + rel_pos[0],
+                self.gs.hover_pos[1] + rel_pos[1],
             )
             if (
-                0 <= preview_col < Board.NR_OF_TILES
-                and 0 <= preview_row < Board.NR_OF_TILES
+                0 <= preview_col < Window.NR_OF_TILES
+                and 0 <= preview_row < Window.NR_OF_TILES
             ):
                 preview_tile = (
-                    preview_col * Board.TILE_SIZE + Board.BOARD_LOCATION[0],
-                    preview_row * Board.TILE_SIZE + Board.BOARD_LOCATION[1],
+                    preview_col * Window.TILE_SIZE + Window.BOARD_LOCATION[0],
+                    preview_row * Window.TILE_SIZE + Window.BOARD_LOCATION[1],
                 )
-                screen.blit(TILES[selected_tile_type].img_prev, preview_tile)
+                self.gs.screen.blit(
+                    TILES[self.gs.selected_tile_type].img_prev, preview_tile
+                )
 
 
-def tiles_overlap(board, pos, shape_positions):
-    for rel_pos in shape_positions:
-        col, row = pos[0] + rel_pos[0], pos[1] + rel_pos[1]
-        if 0 <= col < Board.NR_OF_TILES and 0 <= row < Board.NR_OF_TILES:
-            # Check if a tile already exists at this position
-            if board[col][row] != 0:
-                return True
-    return False
+class KeyManager:
+    def __init__(self, game_state):
+        self.gs = game_state
+        self.dm = game_state.draw_manager
+        self.key_handler = {
+            pygame.K_q: self._handle_key_q,
+            pygame.K_r: self._handle_key_r,
+            pygame.K_f: self._handle_key_f,
+            pygame.K_e: self._handle_key_e,
+            pygame.K_t: self._handle_key_t,
+            pygame.K_w: self.handle_key_w,
+            pygame.K_a: self.handle_key_a,
+            pygame.K_s: self.handle_key_s,
+            pygame.K_d: self.handle_key_d,
+        }
 
+    def _handle_key_q(self):
+        self.gs.selected_shape = self.dm.rotate_shape(False)
 
-# Function to place a tile on the board with relative positions
-def place_tiles(board, pos, tile_type, shape_positions):
-    for rel_pos in shape_positions:
-        col, row = pos[0] + rel_pos[0], pos[1] + rel_pos[1]
-        board[col][row] = tile_type
+    def _handle_key_r(self):
+        self.gs.selected_shape = self.dm.rotate_shape()
 
+    def _handle_key_f(self):
+        self.gs.selected_shape = self.dm.flip_shape()
 
-# hover position not going out of bounds
-def shape_out_of_bound(hover_pos, shape):
-    min_x_offset = min(rel_pos[0] + hover_pos[0] for rel_pos in shape)
-    min_y_offset = min(rel_pos[1] + hover_pos[1] for rel_pos in shape)
-    max_x_offset = max(rel_pos[0] + hover_pos[0] for rel_pos in shape)
-    max_y_offset = max(rel_pos[1] + hover_pos[1] for rel_pos in shape)
-    if (
-        min_x_offset < 0
-        or min_y_offset < 0
-        or max_x_offset >= Board.NR_OF_TILES
-        or max_y_offset >= Board.NR_OF_TILES
-    ):
-        return True
-    return False
+    def _handle_key_e(self):
+        if not self.dm.tiles_overlap():
+            self.dm.place_tiles()
+            self.gs.timecost += self.gs.explore_card.timecost
+            self.gs.drawn = True
 
+    def _handle_key_t(self):
+        self.dm.explore_card_switch()
 
-# Rotate the shape 90 degrees
-def rotate_shape(hover_pos, shape_positions, clockwise=True):
-    if clockwise:
-        new_positions = [(-pos[1], pos[0]) for pos in shape_positions]
-    else:
-        new_positions = [(pos[1], -pos[0]) for pos in shape_positions]
+    def handle_key_w(self):
+        self.gs.hover_pos = self.dm.move_shape((0, -1))
 
-    if shape_out_of_bound(hover_pos, new_positions):
-        return shape_positions
-    return new_positions
+    def handle_key_a(self):
+        self.gs.hover_pos = self.dm.move_shape((-1, 0))
 
+    def handle_key_s(self):
+        self.gs.hover_pos = self.dm.move_shape((0, 1))
 
-# Flip the shape horizontally
-def flip_shape(hover_pos, shape_positions):
-    new_positions = [(-pos[0], pos[1]) for pos in shape_positions]
-    if shape_out_of_bound(hover_pos, new_positions):
-        return shape_positions
-    return new_positions
-
-
-def move_shape(hover_pos, new_pos_relative, selected_shape):
-    new_pos = (hover_pos[0] + new_pos_relative[0], hover_pos[1] + new_pos_relative[1])
-    if not shape_out_of_bound(new_pos, selected_shape):
-        return new_pos
-    return hover_pos
-
-
-def init_normal_board():
-    board = [[0 for _ in range(Board.NR_OF_TILES)] for _ in range(Board.NR_OF_TILES)]
-    mountains = [(3, 1), (8, 2), (5, 5), (2, 8), (7, 9)]
-    for mountain in mountains:
-        board[mountain[0]][mountain[1]] = 6
-    return board
+    def handle_key_d(self):
+        self.gs.hover_pos = self.dm.move_shape((1, 0))
 
 
 class GameState:
     def __init__(self, selected_shape, selected_tile_type, edicts):
-        self.board = init_normal_board()
+        self.draw_manager = DrawManager(self)
+        self.key_manager = KeyManager(self)
+        self.board = Boards.init_normal_board()
         self.screen = init_screen()
-        self.hover_pos = (Board.NR_OF_TILES // 2, Board.NR_OF_TILES // 2)
+        self.hover_pos = (Window.NR_OF_TILES // 2, Window.NR_OF_TILES // 2)
         self.selected_shape = selected_shape
         self.selected_tile_type = selected_tile_type
         self.edicts = edicts
@@ -200,14 +281,9 @@ class GameState:
         self.running = True
         self.drawn = False
 
-    def new_shape(self, selected_shape, selected_tile_type):
-        self.hover_pos = (Board.NR_OF_TILES // 2, Board.NR_OF_TILES // 2)
-        self.selected_shape = selected_shape
-        self.selected_tile_type = selected_tile_type
-
     def update_edicts(self, active_edicts):
         # (x, y, width, height)
-        rect = (0, 0, Board.WINDOW_SIZE[0], Board.CARD_SIZE[1] + Board.SPACING * 2)
+        rect = (0, 0, Window.WINDOW_SIZE[0], Window.CARD_SIZE[1] + Window.SPACING * 2)
         self.screen.fill((255, 255, 255), rect)
 
         edicts = ["A", "B", "C", "D"]
@@ -217,45 +293,32 @@ class GameState:
                 if key in active_edicts
                 else self.edicts[key].img_prev
             )
-            position = (Board.SPACING * (i + 1) + Board.CARD_SIZE[0] * i, Board.SPACING)
+            position = (
+                Window.SPACING * (i + 1) + Window.CARD_SIZE[0] * i,
+                Window.SPACING,
+            )
             self.screen.blit(image, position)
+
+    def _new_shape(self, selected_shape, selected_tile_type):
+        self.hover_pos = (Window.NR_OF_TILES // 2, Window.NR_OF_TILES // 2)
+        self.selected_shape = selected_shape
+        self.selected_tile_type = selected_tile_type
 
     def update_explore_card(self, explore_card):
 
         self.explore_card = explore_card
         self.explore_card_type_pointer = 0
         self.explore_card_shape_pointer = 0
-        self.new_shape(explore_card.shapes[0], TILES_DICT[explore_card.types[0]].val)
-        self.screen.blit(explore_card.img, Board.EXPLORE_CARD_LOCATION)
-
-    def _explore_card_switch(self):
-        if len(self.explore_card.types) > 1:
-            self.explore_card_type_pointer += 1
-            if self.explore_card_type_pointer == len(self.explore_card.types):
-                self.explore_card_type_pointer = 0
-
-            self.selected_tile_type = TILES_DICT[
-                self.explore_card.types[self.explore_card_type_pointer]
-            ].val
-
-        elif len(self.explore_card.shapes) > 1:
-
-            self.explore_card_shape_pointer = 1 - self.explore_card_shape_pointer
-
-            new_shape = self.explore_card.shapes[self.explore_card_shape_pointer]
-
-            if shape_out_of_bound(self.hover_pos, new_shape):
-                self.explore_card_shape_pointer = 1 - self.explore_card_shape_pointer
-            else:
-                self.selected_shape = new_shape
+        self._new_shape(explore_card.shapes[0], TILES_DICT[explore_card.types[0]].val)
+        self.screen.blit(explore_card.img, Window.EXPLORE_CARD_LOCATION)
 
     # Function to draw/update the current board
     def _update_board(self):
-        for col in range(Board.NR_OF_TILES):
-            for row in range(Board.NR_OF_TILES):
+        for col in range(Window.NR_OF_TILES):
+            for row in range(Window.NR_OF_TILES):
                 tile = (
-                    col * Board.TILE_SIZE + Board.BOARD_LOCATION[0],
-                    row * Board.TILE_SIZE + Board.BOARD_LOCATION[1],
+                    col * Window.TILE_SIZE + Window.BOARD_LOCATION[0],
+                    row * Window.TILE_SIZE + Window.BOARD_LOCATION[1],
                 )
                 type = self.board[col][row]
                 self.screen.blit(TILES[type].img, tile)
@@ -266,54 +329,9 @@ class GameState:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
-                    self.selected_shape = rotate_shape(
-                        self.hover_pos, self.selected_shape
-                    )
-                if event.key == pygame.K_q:
-                    self.selected_shape = rotate_shape(
-                        self.hover_pos, self.selected_shape, False
-                    )
-                elif event.key == pygame.K_f:
-                    self.selected_shape = flip_shape(
-                        self.hover_pos, self.selected_shape
-                    )
-                elif event.key == pygame.K_e:
-                    if not tiles_overlap(
-                        self.board, self.hover_pos, self.selected_shape
-                    ):
-                        place_tiles(
-                            self.board,
-                            self.hover_pos,
-                            self.selected_tile_type,
-                            self.selected_shape,
-                        )
-                        self.timecost += self.explore_card.timecost
-                        self.drawn = True
-                elif event.key == pygame.K_t:
-                    self._explore_card_switch()
+                if event.key in self.key_manager.key_handler:
+                    self.key_manager.key_handler[event.key]()
 
-                # WASD keys to move the hover position
-                elif event.key == pygame.K_w:
-                    self.hover_pos = move_shape(
-                        self.hover_pos, (0, -1), self.selected_shape
-                    )
-                elif event.key == pygame.K_s:
-                    self.hover_pos = move_shape(
-                        self.hover_pos, (0, 1), self.selected_shape
-                    )
-                elif event.key == pygame.K_a:
-                    self.hover_pos = move_shape(
-                        self.hover_pos, (-1, 0), self.selected_shape
-                    )
-                elif event.key == pygame.K_d:
-                    self.hover_pos = move_shape(
-                        self.hover_pos, (1, 0), self.selected_shape
-                    )
-
-        # self.screen.fill((255, 255, 255))  # Clear the screen to prevent artifacts
         self._update_board()
-        draw_preview(
-            self.screen, self.hover_pos, self.selected_shape, self.selected_tile_type
-        )
+        self.draw_manager.draw_preview()
         pygame.display.flip()
