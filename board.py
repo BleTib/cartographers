@@ -182,7 +182,7 @@ def move_shape(hover_pos, new_pos_relative, selected_shape):
 
 def init_normal_board():
     board = [[0 for _ in range(Board.NR_OF_TILES)] for _ in range(Board.NR_OF_TILES)]
-    mountains = [(3, 1), (8, 2), (5, 5), (2, 8), (7, 10)]
+    mountains = [(3, 1), (8, 2), (5, 5), (2, 8), (7, 9)]
     for mountain in mountains:
         board[mountain[0]][mountain[1]] = 6
     return board
@@ -236,7 +236,7 @@ class GameState:
             self.selected_tile_type = TILES_DICT[
                 self.explore_card.types[self.explore_card_type_pointer]
             ].val
-            
+
         elif len(self.explore_card.shapes) > 1:
 
             self.explore_card_shape_pointer = 1 - self.explore_card_shape_pointer
