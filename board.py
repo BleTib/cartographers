@@ -196,6 +196,7 @@ class GameState:
         self.selected_shape = selected_shape
         self.selected_tile_type = selected_tile_type
         self.edicts = edicts
+        self.timecost = 0
         self.running = True
         self.drawn = False
 
@@ -220,7 +221,7 @@ class GameState:
             self.screen.blit(image, position)
 
     def update_explore_card(self, explore_card):
-        print("update explore card")
+
         self.explore_card = explore_card
         self.explore_card_type_pointer = 0
         self.explore_card_shape_pointer = 0
@@ -287,6 +288,7 @@ class GameState:
                             self.selected_tile_type,
                             self.selected_shape,
                         )
+                        self.timecost += self.explore_card.timecost
                         self.drawn = True
                 elif event.key == pygame.K_t:
                     self._explore_card_switch()

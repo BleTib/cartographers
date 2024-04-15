@@ -49,7 +49,7 @@ def init_explore_cards():
     explore_cards = EXPLORE_CARDS.copy()
     random.shuffle(explore_cards)
     init_explore_card_images(explore_cards)
-    print("!!!")
+
     return explore_cards
 
 
@@ -59,13 +59,6 @@ def init_explore_cards():
 # draw phase
 # check phase
 
-
-# init board
-# init edicts and scoring cards
-# init season (both scoring cards
-
-# start game
-# for scorings in seasons:
 
 pygame.init()
 
@@ -91,14 +84,13 @@ for season in SEASONS:
     print()
 
     # Season rounds
-    timecost = 0
+    gamestate.timecost = 0
     gamestate.drawn = True  # that if clause can be accessed
-    while timecost < season.time and gamestate.running:
+    while gamestate.timecost < season.time and gamestate.running:
         if gamestate.drawn:
             explore_card = explore_cards.pop()
             gamestate.update_explore_card(explore_card)
-            timecost += explore_card.timecost
-            print("timecost", timecost)
+            print("timecost", gamestate.timecost)
         gamestate.draw_board()
 
     score1 = edicts[season.edicts[0]].score(gamestate.board)
