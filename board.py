@@ -346,17 +346,17 @@ class KeyManager:
 
 
 class GameState:
-    def __init__(self, selected_shape, selected_tile_type, edicts):
+    def __init__(self):
         self.draw_manager = DrawManager(self)
         self.key_manager = KeyManager(self)
         self.board = init_normal_board()
         self.screen = init_screen()
         self.hover_pos = (Window.NR_OF_TILES // 2, Window.NR_OF_TILES // 2)
-        self.selected_shape = selected_shape
-        self.selected_tile_type = selected_tile_type
+        self.selected_shape = None
+        self.selected_tile_type = None
         self.mountain_coins = MOUNTAINS.copy()
         self.coins = 0
-        self.edicts = edicts
+        self.edicts = None
         self.season = None
         self.timecost = 0
         self.running = True
@@ -384,6 +384,9 @@ class GameState:
         self.season = season
         self._update_edicts(season.edicts)
         self.draw_manager.show_season()
+
+    def set_edicts(self, edicts):
+        self.edicts = edicts
 
     def _new_shape(self, selected_shape, selected_tile_type):
         self.hover_pos = (Window.NR_OF_TILES // 2, Window.NR_OF_TILES // 2)

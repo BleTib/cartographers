@@ -3,14 +3,6 @@ from board import GameState, init_scoring_card_images, init_explore_card_images
 from cards import SCORING_CARDS, EXPLORE_CARDS
 import random
 
-SHAPES = {
-    "3x1": [(0, -1), (0, 0), (0, 1)],
-    "Edge": [(0, 1), (0, 0), (1, 0)],
-    "L": [(-1, 0), (0, 0), (1, 0), (1, 1)],
-    # "T": [(-1, -1), (-1, 0), (-1, 1), (0, 0), (1, 0)],
-    "t": [(0, -1), (0, 0), (0, 1), (1, 0)],
-}
-
 
 class Season:
     def __init__(self, key, time, edicts):
@@ -25,12 +17,6 @@ SEASONS = [
     Season("Fall", 7, ["C", "D"]),
     Season("Winter", 6, ["D", "A"]),
 ]
-
-
-def new_shape():
-    selected_shape = SHAPES[random.choice(list(SHAPES.keys()))]
-    selected_tile_type = random.randint(1, 4)
-    return selected_shape, selected_tile_type
 
 
 def init_scoring_cards():
@@ -62,12 +48,12 @@ def init_explore_cards():
 
 pygame.init()
 
+gamestate = GameState()
 edicts = init_scoring_cards()
+gamestate.set_edicts(edicts)
 
-# Main loop
-selected_shape, selected_tile_type = new_shape()
-gamestate = GameState(selected_shape, selected_tile_type, edicts)
 score = 0
+# Main loop
 for season in SEASONS:
     if not gamestate.running:
         break
