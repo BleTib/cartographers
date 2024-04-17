@@ -71,7 +71,7 @@ score = 0
 for season in SEASONS:
     if not gamestate.running:
         break
-    gamestate.update_edicts(season.edicts)
+    gamestate.set_season(season)
     explore_cards = init_explore_cards()
     print()
     print("Season:", season.name)
@@ -90,7 +90,7 @@ for season in SEASONS:
         if gamestate.drawn:
             explore_card = explore_cards.pop()
             gamestate.update_explore_card(explore_card)
-            print("timecost", gamestate.timecost)
+            gamestate.draw_manager.update_board_screen()
         gamestate.draw_board()
 
     score1 = edicts[season.edicts[0]].score(gamestate.board)

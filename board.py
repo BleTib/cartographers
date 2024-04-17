@@ -36,6 +36,7 @@ class Window:
         CARD_SIZE[0] * 4 + SPACING * 5,
         TILE_SIZE * NR_OF_TILES + CARD_SIZE[1] + SPACING * 3,
     )
+    FONT_SIZE = 36
 
 
 # Create the window
@@ -165,6 +166,62 @@ class DrawManager:
             else:
                 self.gs.selected_shape = new_shape
 
+    def show_season(self):
+        font = pygame.font.Font(None, Window.FONT_SIZE)
+        text_surface = font.render(
+            f"{self.gs.season.name}",
+            True,
+            (0, 0, 0),
+            (255, 255, 255),
+        )
+        text_location = (
+            Window.BOARD_SIZE + Window.SPACING * 2,
+            Window.CARD_SIZE[1] * 2 + Window.SPACING * 3,
+        )
+        fill_rect = (
+            text_location[0],
+            text_location[1],
+            Window.CARD_SIZE[0],
+            Window.FONT_SIZE,
+        )
+        self.gs.screen.fill((255, 255, 255), fill_rect)
+        self.gs.screen.blit(text_surface, text_location)
+
+    def show_remaining_time(self):
+        font = pygame.font.Font(None, Window.FONT_SIZE)
+        time_left = max(
+            0, self.gs.season.time - self.gs.timecost - self.gs.explore_card.timecost
+        )
+        text_surface = font.render(
+            f"Time left: {time_left}",
+            True,
+            (0, 0, 0),
+            (255, 255, 255),
+        )
+        self.gs.screen.blit(
+            text_surface,
+            (
+                Window.BOARD_SIZE + Window.SPACING * 2,
+                Window.CARD_SIZE[1] * 2 + Window.SPACING * 3 + Window.FONT_SIZE,
+            ),
+        )
+
+    def show_coins(self):
+        font = pygame.font.Font(None, Window.FONT_SIZE)
+        text_surface = font.render(
+            f"Coins: {self.gs.coins}",
+            True,
+            (0, 0, 0),
+            (255, 255, 255),
+        )
+        self.gs.screen.blit(
+            text_surface,
+            (
+                Window.BOARD_SIZE + Window.SPACING * 2,
+                Window.CARD_SIZE[1] * 2 + Window.SPACING * 3 + Window.FONT_SIZE * 2,
+            ),
+        )
+
     def rotate_shape(self, clockwise=True):
         if clockwise:
             new_positions = [(-pos[1], pos[0]) for pos in self.gs.selected_shape]
@@ -227,9 +284,11 @@ class DrawManager:
                 type = self.gs.board[col][row]
                 self.gs.screen.blit(TILES[type].img, tile)
 
-    def _update_board_screen(self):
+    def update_board_screen(self):
         self._update_board()
         self._draw_preview()
+        self.show_remaining_time()
+        self.show_coins()
         pygame.display.flip()
 
 
@@ -298,11 +357,12 @@ class GameState:
         self.mountain_coins = MOUNTAINS.copy()
         self.coins = 0
         self.edicts = edicts
+        self.season = None
         self.timecost = 0
         self.running = True
         self.drawn = False
 
-    def update_edicts(self, active_edicts):
+    def _update_edicts(self, active_edicts):
         # (x, y, width, height)
         rect = (0, 0, Window.WINDOW_SIZE[0], Window.CARD_SIZE[1] + Window.SPACING * 2)
         self.screen.fill((255, 255, 255), rect)
@@ -320,6 +380,11 @@ class GameState:
             )
             self.screen.blit(image, position)
 
+    def set_season(self, season):
+        self.season = season
+        self._update_edicts(season.edicts)
+        self.draw_manager.show_season()
+
     def _new_shape(self, selected_shape, selected_tile_type):
         self.hover_pos = (Window.NR_OF_TILES // 2, Window.NR_OF_TILES // 2)
         self.selected_shape = selected_shape
@@ -333,6 +398,9 @@ class GameState:
         self._new_shape(explore_card.shapes[0], TILES_DICT[explore_card.types[0]].val)
         self.screen.blit(explore_card.img, Window.EXPLORE_CARD_LOCATION)
 
+        self.draw_manager.show_remaining_time()
+        self.draw_manager.show_coins()
+
     def _check_mountain_coins(self):
         for mountain in self.mountain_coins:
             mountain_circled = True
@@ -345,11 +413,10 @@ class GameState:
 
     def draw_board(self):
         self.running, self.drawn = True, False
-        self.draw_manager._update_board_screen()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key in self.key_manager.key_handler:
                     self.key_manager.key_handler[event.key]()
-                    self.draw_manager._update_board_screen()
+                    self.draw_manager.update_board_screen()
