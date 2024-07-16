@@ -5,8 +5,8 @@ import random
 
 
 class Season:
-    def __init__(self, key, time, edicts):
-        self.name = key
+    def __init__(self, name, time, edicts):
+        self.name = name
         self.time = time
         self.edicts = edicts
 
